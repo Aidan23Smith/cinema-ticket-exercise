@@ -31,9 +31,8 @@ import static uk.gov.dwp.uc.pairtest.domain.TicketRequest.Type.INFANT;
 public class TicketPurchaseRequestTest {
 
     private static final Long ACCOUNT_ID = 1L;
-
     private static final TicketRequest[] TICKET_REQUEST = new TicketRequest[0];
-    private static final TicketRequest[] LONG_VALID_TICKET_REQUESTS = new TicketRequest[]{
+    private static final TicketRequest[] MANY_TICKET_REQUESTS = new TicketRequest[]{
         new TicketRequest(INFANT, 1),
         new TicketRequest(CHILD, 1),
         new TicketRequest(CHILD, 1),
@@ -107,8 +106,8 @@ public class TicketPurchaseRequestTest {
         }
 
         @Test
-        void validTicketRequests_extreme() {
-            TicketPurchaseRequest underTest = new TicketPurchaseRequest(ACCOUNT_ID, LONG_VALID_TICKET_REQUESTS);
+        void validTicketRequests_manyRequests() {
+            TicketPurchaseRequest underTest = new TicketPurchaseRequest(ACCOUNT_ID, MANY_TICKET_REQUESTS);
 
             assertDoesNotThrow(underTest::validate);
         }
@@ -160,7 +159,7 @@ public class TicketPurchaseRequestTest {
                              createTicketRequests(0, 1, 1),
                              NO_ADULTS_WERE_PRESENT_ERROR),
                 Arguments.of("Negative quantity of seats",
-                             createTicketRequests(-1, 1, 1),
+                             createTicketRequests(-1, 0, 0),
                              NEGATIVE_QUANTITY_OF_TICKETS_ERROR),
                 Arguments.of("30 seats split into requests",
                              createTicketRequests(10, 10, 10),
@@ -213,7 +212,7 @@ public class TicketPurchaseRequestTest {
 
         @Test
         void testCalculateCost_LongRequest() {
-            TicketPurchaseRequest underTest = new TicketPurchaseRequest(ACCOUNT_ID, LONG_VALID_TICKET_REQUESTS);
+            TicketPurchaseRequest underTest = new TicketPurchaseRequest(ACCOUNT_ID, MANY_TICKET_REQUESTS);
 
             int expectedCost = 18 * CHILD.getCost() + ADULT.getCost();
 
@@ -243,8 +242,8 @@ public class TicketPurchaseRequestTest {
         }
 
         @Test
-        void testNumberOfSeats_LongRequest() {
-            TicketPurchaseRequest underTest = new TicketPurchaseRequest(ACCOUNT_ID, LONG_VALID_TICKET_REQUESTS);
+        void testNumberOfSeats_ManyIndividualRequests() {
+            TicketPurchaseRequest underTest = new TicketPurchaseRequest(ACCOUNT_ID, MANY_TICKET_REQUESTS);
 
             assertThat(underTest.numberOfSeats(), is(19));
         }

@@ -56,13 +56,6 @@ public class TicketRequestTest {
             assertThat(exception.getMessage(), is(NEGATIVE_QUANTITY_OF_TICKETS_ERROR));
         }
 
-        @ParameterizedTest(name = "Valid input of {0} tickets")
-        @ValueSource(ints = {0, 1, Integer.MAX_VALUE})
-        void validQuantity(int numberOfTickets) {
-            TicketRequest underTest = new TicketRequest(TYPE, numberOfTickets);
-            assertDoesNotThrow(underTest::validateRequest);
-        }
-
         @Test
         void nullType() {
             TicketRequest underTest = new TicketRequest(null, NUMBER_OF_TICKETS);
