@@ -5,6 +5,7 @@ import uk.gov.dwp.uc.pairtest.exception.InvalidPurchaseException;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Objects;
+import java.util.Optional;
 
 import static uk.gov.dwp.uc.pairtest.domain.TicketRequest.Type.ADULT;
 import static uk.gov.dwp.uc.pairtest.domain.TicketRequest.Type.INFANT;
@@ -16,6 +17,8 @@ public class TicketPurchaseRequest {
 
     private final long accountId;
     private final TicketRequest[] ticketRequests;
+    private final String discountCode; 
+
     static final String INVALID_ACCOUNT_ID_ERROR = "Invalid accountId: %d.";
     static final String TOO_MANY_TICKETS_ERROR = "Too many tickets were requested: %d.";
     static final String NO_TICKETS_ERROR = "No tickets were requested.";
@@ -23,13 +26,18 @@ public class TicketPurchaseRequest {
     static final String TOO_MANY_INFANTS_TO_ADULTS_ERROR = "Too many infants compared to adults.";
     static final String NO_TICKET_REQUEST_RECEIVED = "No ticket request received.";
 
-    public TicketPurchaseRequest(long accountId, TicketRequest[] ticketRequests) {
+    public TicketPurchaseRequest(long accountId, TicketRequest[] ticketRequests, String discountCode) {
         this.accountId = accountId;
         this.ticketRequests = ticketRequests;
+        this.discountCode = discountCode;
     }
 
     public long getAccountId() {
         return accountId;
+    }
+    
+    public Optional<String> getDiscountCode() {
+        return Optional.ofNullable(discountCode);
     }
 
     public void validate() {
@@ -62,14 +70,20 @@ public class TicketPurchaseRequest {
     public int numberOfSeats() {
         return Arrays.stream(ticketRequests)
             .filter(request -> !request.getTicketType().equals(INFANT))
-            .map(TicketRequest::getNoOfTickets)
-            .reduce(0, Integer::sum);
+            .mapToInt(TicketRequest::getNoOfTickets)
+            .sum();
     }
 
     public int cost() {
-        return Arrays.stream(ticketRequests)
-            .map(TicketRequest::getRequestCost)
-            .reduce(0, Integer::sum);
+        return cost(0);
+    }
+
+    public int cost(double discount) {
+
+        return (int) (Arrays.stream(ticketRequests)
+                          .map(TicketRequest::getRequestCost)
+                          .reduce(0, Integer::sum)
+                      * (1 - discount));
     }
 
     private int numberOfTicketsForType(TicketRequest.Type type) {

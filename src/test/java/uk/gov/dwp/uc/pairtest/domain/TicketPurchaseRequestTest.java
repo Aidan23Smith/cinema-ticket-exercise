@@ -12,6 +12,8 @@ import uk.gov.dwp.uc.pairtest.exception.InvalidPurchaseException;
 
 import java.util.stream.Stream;
 
+import thirdparty.discount.Discount;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.is;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
@@ -54,6 +56,7 @@ public class TicketPurchaseRequestTest {
         new TicketRequest(CHILD, 1),
         new TicketRequest(ADULT, 1)
     };
+    private static final Discount DISCOUNT = new Discount(0);
 
     @Test
     void getAccountId() {
@@ -193,21 +196,25 @@ public class TicketPurchaseRequestTest {
     @Nested
     class Cost {
 
-        @ParameterizedTest(name = "Test cost calculation with {0} adults, {1} children, and {2} infants")
-        @CsvSource({"1, 0, 0, 20",
-                    "0, 1, 0, 10",
-                    "0, 0, 1, 0",
-                    "1, 1, 1, 30",
-                    "20, 0, 0, 400",
-                    "19, 0, 1, 380"})
-        void testCalculateCost(int numberOfAdults, int numberOfChildren, int numberOfInfants, int expectedCost) {
+        @ParameterizedTest(name = "Test cost calculation with {0} adults, {1} children and {2} infants, and {3} percent off")
+        @CsvSource({"1, 0, 0, 0, 20",
+                    "0, 1, 0, 0, 10",
+                    "0, 0, 1, 0, 0",
+                    "1, 1, 1, 0, 30",
+                    "20, 0, 0, 0, 400",
+                    "19, 0, 1, 0, 380",
+                    "20, 0, 0, 1, 0",
+                    "20, 0, 0, 0.1, 360",
+                    "1, 1, 1, 0.4, 18"})
+        void testCalculateCost(int numberOfAdults, int numberOfChildren, int numberOfInfants, double percentage, int expectedCost) {
+            Discount discount = new Discount(percentage);
             TicketRequest[] ticketRequests = createTicketRequests(numberOfAdults,
                                                                   numberOfChildren,
                                                                   numberOfInfants);
 
             TicketPurchaseRequest underTest = new TicketPurchaseRequest(ACCOUNT_ID, ticketRequests);
 
-            assertThat(underTest.cost(), is(expectedCost));
+            assertThat(underTest.cost(discount), is(expectedCost));
         }
 
         @Test
@@ -216,7 +223,7 @@ public class TicketPurchaseRequestTest {
 
             int expectedCost = 18 * CHILD.getCost() + ADULT.getCost();
 
-            assertThat(underTest.cost(), is(expectedCost));
+            assertThat(underTest.cost(DISCOUNT), is(expectedCost));
         }
     }
 
